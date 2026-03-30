@@ -509,11 +509,11 @@
                 <button class="btn btn-primary" onclick="submitMissingStudy(event)">Submit Request</button>
             </div>
         </div>
-    </div>
+    </div> 
 
     <script>
         // Configuration - UPDATED FOR WORKAROUND 1
-        const WEBHOOK_URL = 'http://localhost:3000';
+        const WEBHOOK_URL = 'https://webhook.site/34ece6a6-2453-4e01-836e-b4d85f2eca87';
         
         const deviceConfig = {
             deviceId: "1b64a06b-c76a-45d2-a0aa-1a293da982fa",
@@ -521,17 +521,19 @@
             serialNumber: "R95R303D04F"
         };
 
-        // Available studies (in production, this would come from Esper managed config or API)
+        // Available studies - UPDATED WITH TEST GROUP IDs
         const availableStudies = [
             {
-                studyId: "GSK-221971",
-                studyName: "GSK SYLVER 221971",
+                studyId: "GSK-Test-Study-A",
+                studyName: "GSK Test Study A",
                 sponsor: "GSK"
+                groupId: "68a05176-f65d-4660-a91d-2d1d051bde43"
             },
             {
-                studyId: "GSK-218130",
-                studyName: "GSK 218130 - Pilot",
+                studyId: "GSK-Test-Study-B",
+                studyName: "GSK Test Study B",
                 sponsor: "GSK"
+                groupId: "2f8c30d3-92a5-4bca-9adc-fb29bdf17aba"
             }
         ];
 
