@@ -512,208 +512,207 @@
     </div> 
 
     <script>
-        // Configuration - UPDATED FOR WORKAROUND 1
-        const WEBHOOK_URL = 'https://webhook.site/34ece6a6-2453-4e01-836e-b4d85f2eca87';
+    // Configuration - UPDATED FOR POC
+    const WEBHOOK_URL = 'https://webhook.site/34ece6a6-2453-4e01-836e-b4d85f2eca87';
+    
+    const deviceConfig = {
+        deviceId: "1b64a06b-c76a-45d2-a0aa-1a293da982fa",
+        deviceName: "MDE-UWN-A01RT",
+        serialNumber: "R95R303D04F"
+    };
+
+    // Available studies - UPDATED WITH TEST GROUP IDs
+    const availableStudies = [
+        {
+            studyId: "GSK-Test-Study-A",
+            studyName: "GSK Test Study A",
+            sponsor: "GSK",
+            groupId: "68a05176-f65d-4660-a91d-2d1d051bde43"
+        },
+        {
+            studyId: "GSK-Test-Study-B",
+            studyName: "GSK Test Study B",
+            sponsor: "GSK",
+            groupId: "2f8c30d3-92a5-4bca-9adc-fb29bdf17aba"
+        }
+    ];
+
+    let selectedStudy = null;
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+        renderStudies();
+    });
+
+    function renderStudies() {
+        const studyList = document.getElementById('studyList');
+        studyList.innerHTML = '';
         
-        const deviceConfig = {
-            deviceId: "1b64a06b-c76a-45d2-a0aa-1a293da982fa",
-            deviceName: "MDE-UWN-A01RT",
-            serialNumber: "R95R303D04F"
-        };
-
-        // Available studies - UPDATED WITH TEST GROUP IDs
-        const availableStudies = [
-            {
-                studyId: "GSK-Test-Study-A",
-                studyName: "GSK Test Study A",
-                sponsor: "GSK"
-                groupId: "68a05176-f65d-4660-a91d-2d1d051bde43"
-            },
-            {
-                studyId: "GSK-Test-Study-B",
-                studyName: "GSK Test Study B",
-                sponsor: "GSK"
-                groupId: "2f8c30d3-92a5-4bca-9adc-fb29bdf17aba"
-            }
-        ];
-
-        let selectedStudy = null;
-
-        // Initialize
-        window.addEventListener('DOMContentLoaded', () => {
-            renderStudies();
+        availableStudies.forEach(study => {
+            const card = createStudyCard(study);
+            studyList.appendChild(card);
         });
+    }
 
-        function renderStudies() {
-            const studyList = document.getElementById('studyList');
-            studyList.innerHTML = '';
-            
-            availableStudies.forEach(study => {
-                const card = createStudyCard(study);
-                studyList.appendChild(card);
-            });
-        }
-
-        function createStudyCard(study) {
-            const card = document.createElement('div');
-            card.className = 'study-card';
-            card.onclick = () => selectStudy(study, card);
-            
-            const initial = study.studyName.charAt(0).toUpperCase();
-            
-            card.innerHTML = `
-                <div class="study-card-header">
-                    <div class="study-icon">${initial}</div>
-                    <div class="study-info">
-                        <div class="study-title">${study.studyName}</div>
-                        <div class="study-id">${study.studyId}</div>
-                    </div>
+    function createStudyCard(study) {
+        const card = document.createElement('div');
+        card.className = 'study-card';
+        card.onclick = () => selectStudy(study, card);
+        
+        const initial = study.studyName.charAt(0).toUpperCase();
+        
+        card.innerHTML = `
+            <div class="study-card-header">
+                <div class="study-icon">${initial}</div>
+                <div class="study-info">
+                    <div class="study-title">${study.studyName}</div>
                 </div>
-                <div class="study-meta">Sponsor: ${study.sponsor}</div>
-                <div class="checkmark">
-                    <svg viewBox="0 0 24 24">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                </div>
-            `;
-            
-            return card;
-        }
+            </div>
+            <div class="checkmark">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+        `;
+        
+        return card;
+    }
 
-        function selectStudy(study, cardElement) {
-            selectedStudy = study;
-            
-            document.querySelectorAll('.study-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            cardElement.classList.add('selected');
-            
-            document.getElementById('continueBtn').disabled = false;
-            document.getElementById('statusText').textContent = `Ready to switch to ${study.studyName}`;
-            
-            console.log('Study selected:', study);
-        }
+    function selectStudy(study, cardElement) {
+        selectedStudy = study;
+        
+        document.querySelectorAll('.study-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        cardElement.classList.add('selected');
+        
+        document.getElementById('continueBtn').disabled = false;
+        document.getElementById('statusText').textContent = `Ready to switch to ${study.studyName}`;
+        
+        console.log('Study selected:', study);
+    }
 
-        async function switchStudy() {
-            if (!selectedStudy) return;
-            
-            const overlay = document.getElementById('loadingOverlay');
-            const loadingTitle = document.getElementById('loadingTitle');
-            const loadingMessage = document.getElementById('loadingMessage');
-            const progressText = document.getElementById('progressText');
-            
-            loadingTitle.textContent = 'Switching Study...';
-            loadingMessage.textContent = `Switching device to ${selectedStudy.studyName}`;
-            progressText.textContent = 'Contacting Esper MDM...';
-            overlay.classList.add('active');
-            
-            try {
-                console.log('Calling webhook:', WEBHOOK_URL);
-                console.log('Payload:', {
-                    deviceId: deviceConfig.deviceId,
-                    targetStudyId: selectedStudy.studyId
-                });
-                
-                const response = await fetch(WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        deviceId: deviceConfig.deviceId,
-                        targetStudyId: selectedStudy.studyId
-                    })
-                });
-                
-                console.log('Response status:', response.status);
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Error response:', errorText);
-                    throw new Error(`API returned ${response.status}: ${errorText}`);
-                }
-                
-                const responseText = await response.text();
-                console.log('Raw response:', responseText);
-                
-                let result = null;
-                
-                // Try to parse JSON, but handle null responses
-                if (responseText && responseText !== 'null') {
-                    try {
-                        result = JSON.parse(responseText);
-                        console.log('Parsed agent response:', result);
-                    } catch (e) {
-                        console.warn('Response is not valid JSON, treating as success');
-                    }
-                }
-                
-                // If we got a 200 status, treat it as success even if response is null
-                if (response.status === 200) {
-                    progressText.textContent = 'Study switch request sent successfully!';
-                    
-                    // Show success
-                    overlay.classList.remove('active');
-                    document.getElementById('successMessage').textContent = 
-                        `Your device switch request has been sent for ${selectedStudy.studyName}. ` +
-                        `The device will reconfigure automatically within 2-5 minutes.`;
-                    document.getElementById('successModal').classList.add('active');
-                    
-                } else {
-                    throw new Error(result?.message || 'Study switch failed');
-                }
-                
-            } catch (error) {
-                console.error('Error switching study:', error);
-                overlay.classList.remove('active');
-                
-                document.getElementById('errorMessage').textContent = 
-                    `Failed to switch study: ${error.message}. Please try again or contact support.`;
-                document.getElementById('errorModal').classList.add('active');
-            }
-        }
-
-        function closeSuccessModal() {
-            document.getElementById('successModal').classList.remove('active');
-            // Optionally refresh the page or update UI
-        }
-
-        function closeErrorModal() {
-            document.getElementById('errorModal').classList.remove('active');
-        }
-
-        function openMissingStudyModal() {
-            document.getElementById('protocolId').value = '';
-            document.getElementById('additionalDetails').value = '';
-            document.getElementById('missingStudyModal').classList.add('active');
-        }
-
-        function closeMissingStudyModal() {
-            document.getElementById('missingStudyModal').classList.remove('active');
-        }
-
-        function submitMissingStudy(event) {
-            if (event) event.preventDefault();
-            
-            const protocolId = document.getElementById('protocolId').value;
-            const additionalDetails = document.getElementById('additionalDetails').value;
-            
-            if (!protocolId) {
-                alert('Please enter a Protocol ID');
-                return;
-            }
-            
-            // In production, send to your API
-            console.log('Missing study request:', {
+    async function switchStudy() {
+        if (!selectedStudy) return;
+        
+        const overlay = document.getElementById('loadingOverlay');
+        const loadingTitle = document.getElementById('loadingTitle');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const progressText = document.getElementById('progressText');
+        
+        loadingTitle.textContent = 'Switching Study...';
+        loadingMessage.textContent = `Switching device to ${selectedStudy.studyName}`;
+        progressText.textContent = 'Contacting Esper MDM...';
+        overlay.classList.add('active');
+        
+        try {
+            console.log('Calling webhook:', WEBHOOK_URL);
+            console.log('Payload:', {
                 deviceId: deviceConfig.deviceId,
-                serialNumber: deviceConfig.serialNumber,
-                protocolId: protocolId,
-                additionalDetails: additionalDetails
+                targetStudyId: selectedStudy.studyId,
+                targetGroupId: selectedStudy.groupId
             });
             
-            closeMissingStudyModal();
-            alert('Request submitted! The MDM team will review and update your device access.');
+            const response = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    deviceId: deviceConfig.deviceId,
+                    targetStudyId: selectedStudy.studyId,
+                    targetGroupId: selectedStudy.groupId
+                })
+            });
+            
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Error response:', errorText);
+                throw new Error(`API returned ${response.status}: ${errorText}`);
+            }
+            
+            const responseText = await response.text();
+            console.log('Raw response:', responseText);
+            
+            let result = null;
+            
+            // Try to parse JSON, but handle null responses
+            if (responseText && responseText !== 'null') {
+                try {
+                    result = JSON.parse(responseText);
+                    console.log('Parsed agent response:', result);
+                } catch (e) {
+                    console.warn('Response is not valid JSON, treating as success');
+                }
+            }
+            
+            // If we got a 200 status, treat it as success even if response is null
+            if (response.status === 200) {
+                progressText.textContent = 'Study switch request sent successfully!';
+                
+                // Show success
+                overlay.classList.remove('active');
+                document.getElementById('successMessage').textContent = 
+                    `Your device switch request has been sent for ${selectedStudy.studyName}. ` +
+                    `The device will reconfigure automatically within 2-5 minutes.`;
+                document.getElementById('successModal').classList.add('active');
+                
+            } else {
+                throw new Error(result?.message || 'Study switch failed');
+            }
+            
+        } catch (error) {
+            console.error('Error switching study:', error);
+            overlay.classList.remove('active');
+            
+            document.getElementById('errorMessage').textContent = 
+                `Failed to switch study: ${error.message}. Please try again or contact support.`;
+            document.getElementById('errorModal').classList.add('active');
         }
-    </script>
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('successModal').classList.remove('active');
+    }
+
+    function closeErrorModal() {
+        document.getElementById('errorModal').classList.remove('active');
+    }
+
+    function openMissingStudyModal() {
+        document.getElementById('protocolId').value = '';
+        document.getElementById('additionalDetails').value = '';
+        document.getElementById('missingStudyModal').classList.add('active');
+    }
+
+    function closeMissingStudyModal() {
+        document.getElementById('missingStudyModal').classList.remove('active');
+    }
+
+    function submitMissingStudy(event) {
+        if (event) event.preventDefault();
+        
+        const protocolId = document.getElementById('protocolId').value;
+        const additionalDetails = document.getElementById('additionalDetails').value;
+        
+        if (!protocolId) {
+            alert('Please enter a Protocol ID');
+            return;
+        }
+        
+        // In production, send to your API
+        console.log('Missing study request:', {
+            deviceId: deviceConfig.deviceId,
+            serialNumber: deviceConfig.serialNumber,
+            protocolId: protocolId,
+            additionalDetails: additionalDetails
+        });
+        
+        closeMissingStudyModal();
+        alert('Request submitted! The MDM team will review and update your device access.');
+    }
+</script>
 </body>
 </html>
